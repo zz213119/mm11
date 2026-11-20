@@ -5,25 +5,38 @@
 
 ## 下载
 
-大文件通过 **Release 附件** 分发（GitHub 普通 git 仓储单文件上限 100MB）。
-
 Release 页面：https://github.com/zz213119/mm11/releases/tag/v39.3.0
 
-| 文件 | 大小 | 说明 |
+| 文件 | 大小 (B) | 说明 |
 |---|---|---|
-| `base.apk` | 366,671,970 B (350 MB) | 抖音 39.3.0 原始安装包 |
-| `dy_dex_39.3.0.tar.gz` | 170,428,149 B (163 MB) | 全部 54 个 `classes*.dex` |
-| `dy_smali44_classes44_39.3.0.tar.gz` | 15,848,285 B (16 MB) | `classes44.dex` 的 baksmali 反编译结果（9316 个类） |
+| `base.apk.part00` ~ `part04` | 83,886,080 ×4 + 31,127,650 | 抖音 39.3.0 原始安装包（350 MB，分 5 卷） |
+| `dy_dex_39.3.0.tar.gz` | 170,428,149 | 全部 54 个 `classes*.dex` |
+| `dy_smali44_classes44_39.3.0.tar.gz` | 15,848,285 | `classes44.dex` 的 baksmali 反编译结果（9316 个类） |
 
-### SHA-256 校验
+**合计 552,948,404 字节**。
+
+### 还原 base.apk（必须按顺序拼接）
+
+```bash
+cat base.apk.part00 base.apk.part01 base.apk.part02 base.apk.part03 base.apk.part04 > base.apk
+
+# 校验（必须一致）
+sha256sum base.apk
+# 6169079898e8a40958c83402c8a7a65d5cee85d56cd0fd869df8a5addea55d01
+```
+
+Windows CMD：
+
+```cmd
+copy /b base.apk.part00+base.apk.part01+base.apk.part02+base.apk.part03+base.apk.part04 base.apk
+```
+
+### 其余文件校验
 
 ```
-6169079898e8a40958c83402c8a7a65d5cee85d56cd0fd869df8a5addea55d01  base.apk
 b4948f6489f680e5890c999f6f7d6b4391a44ab3d65c1df0dcf1b03f305e022e  dy_dex_39.3.0.tar.gz
 e9e71b9d6268c832da20330b9a4d45c5b9feb78a34201a803fc8424f108e4f99  dy_smali44_classes44_39.3.0.tar.gz
 ```
-
-### 解压方式
 
 ```bash
 tar -xzf dy_dex_39.3.0.tar.gz                 # 解出 dex/
@@ -92,10 +105,11 @@ App 内已有官方开关（`设置` → `隐私设置`），关闭效果为**�
 | `friend_online_status` / `online_status_not_show` | classes44 |
 | `%d小时内在线` | resources.arsc |
 
-## 上传记录
+## 上传环境备忘
 
-- 认证方式：GitHub PAT（repo 权限）
-- 分支：main
-- Release tag：`v39.3.0`
-- 环境备忘：`/sdcard` 为 FUSE 挂载，git 无法在其中写入 loose object
+- git 仓库：分支 `main`；Release tag `v39.3.0`
+- `/sdcard` 为 FUSE 挂载，git 无法写入 loose object
   （`unable to write file .git/objects/...`），需在 tmpfs（如 `/tmp`）中初始化并提交后再推送。
+- 单文件 350MB 直传曾出现 `state=starter`（未真正完成），故改为 80MB 分卷上传，
+  分卷全部为 `state=uploaded`。
+- 上传后从 GitHub API 读回的 7 个附件 size 与本地文件逐字节一致。
